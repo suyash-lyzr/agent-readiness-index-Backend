@@ -12,20 +12,35 @@ from models.schemas import SessionStatus
 
 load_dotenv()
 
+
+def _cors_origins() -> list:
+    """Local dev defaults + FRONTEND_URL (Vercel) + optional ALLOWED_ORIGINS (comma-separated)."""
+    origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+    ]
+    front = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+    if front:
+        origins.append(front)
+    extra = os.getenv("ALLOWED_ORIGINS", "").strip()
+    if extra:
+        for o in extra.split(","):
+            o = o.strip().rstrip("/")
+            if o and o not in origins:
+                origins.append(o)
+    return origins
+
+
 app = FastAPI(
     title="Agent Readiness Index API",
     description="AI-powered assessment of organizational AI agent readiness",
     version="1.0.0",
 )
 
-# CORS - allow Next.js frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:3001",
-    ],
+    allow_origins=_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
